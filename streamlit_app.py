@@ -1,6 +1,7 @@
 import streamlit as st
 import urllib3
 from urllib3.exceptions import HTTPError
+from bs4 import BeautifulSoup
 
 # Disable SSL warnings (not recommended for production)
 urllib3.disable_warnings()
@@ -19,6 +20,18 @@ def fetch_url_content(url):
         return f"HTTP Error: {str(e)}"
     except Exception as e:
         return f"Error: {str(e)}"
+    
+def extract_assets(html_content):
+    """Extract CSS and JS links from HTML content"""
+    soup = BeautifulSoup(html_content, 'html.parser')
+    
+    # Extract CSS links
+    css_links = [link['href'] for link in soup.find_all('link', rel='stylesheet') if link.get('href')]
+    
+    # Extract JS links
+    js_links = [script['src'] for script in soup.find_all('script') if script.get('src')]
+    
+    return css_links, js_links
 
 # App title
 st.title("URL Content Fetcher")
@@ -35,19 +48,28 @@ if submit_button and url:
     with st.spinner("Loading..."):
         content = fetch_url_content(url)
 
+    css_links, js_links = extract_assets(content)
+    
+    # Display CSS links
+    with st.expander(f"CSS Files ({len(css_links)})"):
+            if css_links:
+                for css in css_links:
+                    st.code(css, language='text')
+            else:
+                st.info("No CSS links found")
+        
+        # Display JS links
+    with st.expander(f"JavaScript Files ({len(js_links)})"):
+            if js_links:
+                for js in js_links:
+                    st.code(js, language='text')
+            else:
+                st.info("No JavaScript links found")
+    
+    
     with st.expander("Source code"):
         st.caption(":blue[HTML code]")
         st.code(content, language='html', line_numbers=True)
-    # Тут будут список CSS
-    with st.expander("CSS Links"):
-        st.write(''' **Тут ссылки на CSS из документа**''')
-    with st.expander("JS Links"):
-        st.write(''' **Тут ссылки на JS из документа**''')
-    
-    
-    
   
-    
-    
 elif submit_button and not url:
     st.warning("Please enter a URL!")
