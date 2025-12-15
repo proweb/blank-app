@@ -1,5 +1,1 @@
 streamlit
-beautifulsoup4
-beautifulsoup4
-streamlit
-urllib3
